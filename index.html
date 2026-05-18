@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema de Cadastro</title>
+
+  <!-- Ícones Tabler -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+
+  <!-- Fonte moderna -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+
+    /* ===== RESET ===== */
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    /* ===== VARIÁVEIS ===== */
+    :root {
+      --azul-escuro: #1e3a8a;
+      --azul-hover:  #162d6b;
+      --azul-foco:   rgba(30, 58, 138, 0.15);
+      --verde:       #16a34a;
+      --vermelho:    #dc2626;
+      --cinza-borda: #d1d5db;
+      --cinza-bg:    #f9fafb;
+      --texto:       #111827;
+      --texto-suave: #6b7280;
+    }
+
+    /* ===== BODY ===== */
+    body {
+      font-family: 'Plus Jakarta Sans', Arial, sans-serif;
+      background: linear-gradient(135deg, #dbeafe 0%, #5499C7 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      color: var(--texto);
+    }
+
+    /* ===== HEADER ===== */
+    header {
+      background-color: var(--azul-escuro);
+      color: white;
+      text-align: center;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    header h1 {
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    /* ===== MAIN ===== */
+    main {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 30px 20px;
+    }
+
+    /* ===== CARD DO FORMULÁRIO ===== */
+    .card {
+      background-color: white;
+      width: 100%;
+      max-width: 480px;
+      padding: 36px 32px;
+      border-radius: 16px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .card-title {
+      text-align: center;
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--azul-escuro);
+    }
+
+    /* ===== TOAST (feedback) ===== */
+    .toast {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 500;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .toast.success {
+      display: flex;
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      color: #15803d;
+    }
+
+    .toast.error {
+      display: flex;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: var(--vermelho);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ===== CAMPOS ===== */
+    .campo {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .campo label {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--texto-suave);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* ===== INPUT WRAPPER (para ícones de status) ===== */
+    .input-wrap {
+      position: relative;
+    }
+
+    .input-wrap input,
+    .input-wrap select {
+      width: 100%;
+      padding: 11px 40px 11px 13px;
+      border: 1.5px solid var(--cinza-borda);
+      border-radius: 8px;
+      font-size: 15px;
+      font-family: inherit;
+      background-color: var(--cinza-bg);
+      color: var(--texto);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      appearance: auto;
+    }
+
+    .input-wrap input:focus,
+    .input-wrap select:focus {
+      border-color: var(--azul-escuro);
+      box-shadow: 0 0 0 3px var(--azul-foco);
+      background: white;
+    }
+
+    /* Estados de validação */
+    .input-wrap.valid input,
+    .input-wrap.valid select {
+      border-color: var(--verde);
+    }
+
+    .input-wrap.invalid input,
+    .input-wrap.invalid select {
+      border-color: var(--vermelho);
+    }
+
+    /* Ícones de status */
+    .status-icon {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 16px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .input-wrap.valid  .status-icon.ok  { opacity: 1; color: var(--verde);    }
+    .input-wrap.invalid .status-icon.err { opacity: 1; color: var(--vermelho); }
+
+    /* ===== BOTÃO MOSTRAR SENHA ===== */
+    .toggle-pw {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      font-size: 17px;
+      color: var(--texto-suave);
+      background: none;
+      border: none;
+      padding: 0;
+      line-height: 1;
+      transition: color 0.2s;
+    }
+
+    .toggle-pw:hover {
+      color: var(--texto);
+    }
+
+    /* ===== BARRA DE FORÇA DA SENHA ===== */
+    .strength-bar {
+      height: 4px;
+      border-radius: 9999px;
+      background: #e5e7eb;
+      overflow: hidden;
+    }
+
+    .strength-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 9999px;
+      transition: width 0.35s ease, background-color 0.35s ease;
+    }
+
+    .strength-label {
+      font-size: 11px;
+      color: var(--texto-suave);
+      min-height: 14px;
+    }
+
+    /* ===== MENSAGENS DE ERRO ===== */
+    .erro-msg {
+      font-size: 12px;
+      color: var(--vermelho);
+      display: none;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .erro-msg.show {
+      display: flex;
+    }
+
+    /* ===== BOTÃO CADASTRAR ===== */
+    .btn-cadastrar {
+      background-color: var(--azul-escuro);
+      color: white;
+      border: none;
+      padding: 13px;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background-color 0.2s, transform 0.1s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-cadastrar:hover {
+      background-color: var(--azul-hover);
+    }
+
+    .btn-cadastrar:active {
+      transform: scale(0.98);
+    }
+
+    /* ===== FOOTER ===== */
+    footer {
+      background-color: var(--azul-escuro);
+      color: rgba(255, 255, 255, 0.8);
+      text-align: center;
+      padding: 16px;
+      font-size: 13px;
+      box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.15);
+    }
+
+    /* ===== RESPONSIVIDADE ===== */
+    @media (max-width: 540px) {
+      .card {
+        padding: 24px 18px;
+        gap: 16px;
+        border-radius: 12px;
+      }
+
+      header h1 {
+        font-size: 18px;
+      }
+    }
+
+  </style>
+</head>
+
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <h1>
+      <i class="ti ti-users" aria-hidden="true"></i>
+      Sistema de Cadastro de Usuários
+    </h1>
+  </header>
+
+  <!-- CONTEÚDO PRINCIPAL -->
+  <main>
+    <div class="card">
+
+      <h2 class="card-title">Crie sua conta</h2>
+
+      <!-- TOAST DE FEEDBACK -->
+      <div id="toast" class="toast" role="alert" aria-live="polite"></div>
+
+      <!-- NOME -->
+      <div class="campo">
+        <label for="nome">
+          <i class="ti ti-user" aria-hidden="true"></i>
+          Nome completo
+        </label>
+        <div class="input-wrap" id="wrap-nome">
+          <input
+            type="text"
+            id="nome"
+            placeholder="Digite seu nome completo"
+            autocomplete="name"
+          >
+          <i class="ti ti-check status-icon ok" aria-hidden="true"></i>
+          <i class="ti ti-x status-icon err" aria-hidden="true"></i>
+        </div>
+        <span class="erro-msg" id="err-nome">
+          <i class="ti ti-alert-circle" style="font-size:13px"></i>
+          O nome é obrigatório.
+        </span>
+      </div>
+
+      <!-- EMAIL -->
+      <div class="campo">
+        <label for="email">
+          <i class="ti ti-mail" aria-hidden="true"></i>
+          E-mail
+        </label>
+        <div class="input-wrap" id="wrap-email">
+          <input
+            type="email"
+            id="email"
+            placeholder="exemplo@email.com"
+            autocomplete="email"
+          >
+          <i class="ti ti-check status-icon ok" aria-hidden="true"></i>
+          <i class="ti ti-x status-icon err" aria-hidden="true"></i>
+        </div>
+        <span class="erro-msg" id="err-email">
+          <i class="ti ti-alert-circle" style="font-size:13px"></i>
+          Digite um e-mail válido.
+        </span>
+      </div>
+
+      <!-- DATA DE NASCIMENTO -->
+      <div class="campo">
+        <label for="data">
+          <i class="ti ti-calendar" aria-hidden="true"></i>
+          Data de nascimento
+        </label>
+        <div class="input-wrap" id="wrap-data">
+          <input
+            type="date"
+            id="data"
+            autocomplete="bday"
+          >
+          <i class="ti ti-check status-icon ok" aria-hidden="true"></i>
+          <i class="ti ti-x status-icon err" aria-hidden="true"></i>
+        </div>
+        <span class="erro-msg" id="err-data">
+          <i class="ti ti-alert-circle" style="font-size:13px"></i>
+          Selecione sua data de nascimento.
+        </span>
+      </div>
+
+      <!-- GÊNERO -->
+      <div class="campo">
+        <label for="genero">
+          <i class="ti ti-gender-bigender" aria-hidden="true"></i>
+          Gênero
+        </label>
+        <div class="input-wrap" id="wrap-genero">
+          <select id="genero" autocomplete="sex">
+            <option value="">Selecione</option>
+            <option value="masculino">Masculino</option>
+            <option value="feminino">Feminino</option>
+            <option value="outro">Prefiro não informar</option>
+          </select>
+        </div>
+        <span class="erro-msg" id="err-genero">
+          <i class="ti ti-alert-circle" style="font-size:13px"></i>
+          Selecione uma opção.
+        </span>
+      </div>
+
+      <!-- SENHA -->
+      <div class="campo">
+        <label for="senha">
+          <i class="ti ti-lock" aria-hidden="true"></i>
+          Senha
+        </label>
+        <div class="input-wrap" id="wrap-senha">
+          <input
+            type="password"
+            id="senha"
+            placeholder="Mínimo 6 caracteres"
+            autocomplete="new-password"
+            style="padding-right: 42px;"
+          >
+          <button
+            class="toggle-pw"
+            type="button"
+            onclick="togglePw('senha', 'icon-senha')"
+            aria-label="Mostrar ou ocultar senha"
+          >
+            <i class="ti ti-eye" id="icon-senha"></i>
+          </button>
+        </div>
+        <!-- Barra de força -->
+        <div class="strength-bar">
+          <div class="strength-fill" id="strength-fill"></div>
+        </div>
+        <span class="strength-label" id="strength-label"></span>
+        <span class="erro-msg" id="err-senha">
+          <i class="ti ti-alert-circle" style="font-size:13px"></i>
+          A senha deve ter pelo menos 6 caracteres.
+        </span>
+      </div>
+
+      <!-- CONFIRMAR SENHA -->
+      <div class="campo">
+        <label for="confirmar">
+          <i class="ti ti-lock-check" aria-hidden="true"></i>
+          Confirmar senha
+        </label>
+        <div class="input-wrap" id="wrap-confirmar">
+          <input
+            type="password"
+            id="confirmar"
+            placeholder="Repita sua senha"
+            autocomplete="new-password"
+            style="padding-right: 42px;"
+          >
+          <button
+            class="toggle-pw"
+            type="button"
+            onclick="togglePw('confirmar', 'icon-confirmar')"
+            aria-label="Mostrar ou ocultar confirmação de senha"
+          >
+            <i class="ti ti-eye" id="icon-confirmar"></i>
+          </button>
+        </div>
+        <span class="erro-msg" id="err-confirmar">
+          <i class="ti ti-alert-circle" style="font-size:13px"></i>
+          As senhas precisam ser iguais.
+        </span>
+      </div>
+
+      <!-- BOTÃO -->
+      <button class="btn-cadastrar" type="button" onclick="handleSubmit()">
+        <i class="ti ti-user-plus" aria-hidden="true"></i>
+        Cadastrar
+      </button>
+
+    </div>
+  </main>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>Projeto desenvolvido por Joyce Kelly</p>
+  </footer>
+
+  <script>
+
+    /* ===== MOSTRAR / OCULTAR SENHA ===== */
+    function togglePw(inputId, iconId) {
+      const input = document.getElementById(inputId);
+      const icon  = document.getElementById(iconId);
+      if (input.type === 'password') {
+        input.type  = 'text';
+        icon.className = 'ti ti-eye-off';
+      } else {
+        input.type  = 'password';
+        icon.className = 'ti ti-eye';
+      }
+    }
+
+    /* ===== ESTADO DOS CAMPOS (borda + ícone) ===== */
+    function setWrap(id, estado) {
+      const el = document.getElementById('wrap-' + id);
+      if (!el) return;
+      el.classList.remove('valid', 'invalid');
+      if (estado) el.classList.add(estado);
+    }
+
+    /* ===== MENSAGEM DE ERRO ===== */
+    function showErr(id, mostrar) {
+      const el = document.getElementById('err-' + id);
+      if (el) el.classList.toggle('show', mostrar);
+    }
+
+    /* ===== VALIDAÇÃO DE EMAIL ===== */
+    function validarEmail(valor) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(valor);
+    }
+
+    /* ===== FORÇA DA SENHA ===== */
+    function calcularForca(senha) {
+      let pontos = 0;
+      if (senha.length >= 6)           pontos++;
+      if (senha.length >= 10)          pontos++;
+      if (/[A-Z]/.test(senha))         pontos++;
+      if (/[0-9]/.test(senha))         pontos++;
+      if (/[^A-Za-z0-9]/.test(senha))  pontos++;
+      return pontos;
+    }
+
+    /* Atualiza a barra de força em tempo real */
+    document.getElementById('senha').addEventListener('input', function () {
+      const senha  = this.value;
+      const forca  = calcularForca(senha);
+      const fill   = document.getElementById('strength-fill');
+      const label  = document.getElementById('strength-label');
+
+      const niveis = [
+        { largura: '0%',   cor: '',        texto: '' },
+        { largura: '20%',  cor: '#dc2626', texto: 'Muito fraca' },
+        { largura: '40%',  cor: '#f97316', texto: 'Fraca' },
+        { largura: '65%',  cor: '#eab308', texto: 'Média' },
+        { largura: '85%',  cor: '#22c55e', texto: 'Forte' },
+        { largura: '100%', cor: '#16a34a', texto: 'Muito forte' },
+      ];
+
+      const nivel = senha.length === 0 ? niveis[0] : niveis[Math.min(forca, 5)];
+      fill.style.width           = nivel.largura;
+      fill.style.backgroundColor = nivel.cor;
+      label.textContent          = nivel.texto;
+      label.style.color          = nivel.cor;
+    });
+
+    /* ===== TOAST DE FEEDBACK ===== */
+    function mostrarToast(mensagem, tipo) {
+      const toast = document.getElementById('toast');
+      const icone = tipo === 'success'
+        ? '<i class="ti ti-circle-check" style="font-size:18px;flex-shrink:0"></i>'
+        : '<i class="ti ti-alert-circle" style="font-size:18px;flex-shrink:0"></i>';
+
+      toast.className   = 'toast ' + tipo;
+      toast.innerHTML   = icone + mensagem;
+
+      /* Oculta automaticamente após 5 segundos */
+      clearTimeout(toast._timer);
+      toast._timer = setTimeout(() => { toast.className = 'toast'; }, 5000);
+    }
+
+    /* ===== SUBMISSÃO DO FORMULÁRIO ===== */
+    function handleSubmit() {
+      let valido = true;
+
+      /* Nome */
+      const nome = document.getElementById('nome').value.trim();
+      const nomeOk = nome.length >= 2;
+      setWrap('nome', nomeOk ? 'valid' : 'invalid');
+      showErr('nome', !nomeOk);
+      if (!nomeOk) valido = false;
+
+      /* E-mail */
+      const email = document.getElementById('email').value.trim();
+      const emailOk = validarEmail(email);
+      setWrap('email', emailOk ? 'valid' : 'invalid');
+      showErr('email', !emailOk);
+      if (!emailOk) valido = false;
+
+      /* Data */
+      const data = document.getElementById('data').value;
+      const dataOk = data !== '';
+      setWrap('data', dataOk ? 'valid' : 'invalid');
+      showErr('data', !dataOk);
+      if (!dataOk) valido = false;
+
+      /* Gênero */
+      const genero = document.getElementById('genero').value;
+      const generoOk = genero !== '';
+      setWrap('genero', generoOk ? 'valid' : 'invalid');
+      showErr('genero', !generoOk);
+      if (!generoOk) valido = false;
+
+      /* Senha */
+      const senha = document.getElementById('senha').value;
+      const senhaOk = senha.length >= 6;
+      setWrap('senha', senhaOk ? 'valid' : 'invalid');
+      showErr('senha', !senhaOk);
+      if (!senhaOk) valido = false;
+
+      /* Confirmar senha */
+      const confirmar = document.getElementById('confirmar').value;
+      const confirmarOk = confirmar === senha && confirmar.length > 0;
+      setWrap('confirmar', confirmarOk ? 'valid' : 'invalid');
+      showErr('confirmar', !confirmarOk);
+      if (!confirmarOk) valido = false;
+
+      /* Resultado */
+      if (valido) {
+        const primeiroNome = nome.split(' ')[0];
+        mostrarToast(
+          ' Cadastro realizado com sucesso! Bem-vinda, <strong>' + primeiroNome + '</strong>!',
+          'success'
+        );
+      } else {
+        mostrarToast(
+          ' Corrija os campos destacados antes de continuar.',
+          'error'
+        );
+      }
+    }
+
+  </script>
+
+</body>
+</html>
